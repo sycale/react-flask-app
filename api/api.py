@@ -55,3 +55,12 @@ def get_posts():
     for item in items:
         _items_.append(json.dumps(item, cls=AlchemyEncoder))
     return {'posts': _items_}
+
+@app.route('/api/posts/clear', methods=['POST'])
+def clear_posts():
+    try:
+        db.session.query(Post).delete()
+        db.session.commit()
+        return make_response(jsonify({'message': 'privet'}), 200)
+    except:
+        return make_response(400)
