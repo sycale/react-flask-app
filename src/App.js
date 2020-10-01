@@ -1,98 +1,41 @@
 import React, { useEffect, useState } from "react";
+import { NavbarText } from "reactstrap";
+import { BrowserRouter as Router, Switch, Link, Route } from "react-router-dom";
+import Posts from "./Components/Posts.jsx";
 
-function App() {
-  const [title, setTitle] = useState(null);
-  const [message, setMessage] = useState(null);
-  const [posts, setPosts] = useState(null);
-  const [needUpdate, setUpdate] = useState(null);
+function Home() {
+  return <div>Hello</div>;
+}
 
-  useEffect(() => {
-    fetch("/api/posts")
-      .then((response) => response.json())
-      .then((data) => {
-        const _data_ = data.posts.map((e) => JSON.parse(e));
-        setPosts(_data_);
-      });
-  }, [needUpdate]);
-
-  function handlePostData() {
-    setUpdate(needUpdate + 1);
-    const dataToSend = {
-      title: title,
-      comment: message,
-    };
-    fetch("/api/add", {
-      method: "POST",
-      credentials: "include",
-      body: JSON.stringify(dataToSend),
-      cache: "no-cache",
-      headers: new Headers({
-        "content-type": "application/json",
-      }),
-    }).then((response) => {
-      if (response.status !== 200) {
-        console.log(response);
-      }
-    });
-  }
-  function handleClearDb() {
-    setUpdate(needUpdate + 1);
-    fetch("/api/posts/clear", {
-      method: "POST",
-      credentials: "include",
-      cache: "no-cache",
-      headers: new Headers({
-        "content-type": "application/json",
-      }),
-    }).then((response) => {
-      if (response.status !== 200) {
-        console.log(response);
-      }
-    });
-  }
+export default function App() {
   return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
-      <div>
-        <input type="text" onInput={(e) => setTitle(e.target.value)} />
-        <input type="text" onInput={(e) => setMessage(e.target.value)} />
-        <button
-          type="submit"
-          onClick={() => {
-            handlePostData();
-          }}
-        >
-          Send data
-        </button>
-      </div>
-      <div>
-        {posts
-          ? posts.map((post, i) => {
-              return (
-                <div key={i}>
-                  <div>
-                    <span>
-                      <h1>Title:</h1>
-                      <br></br>
-                      {post.title}
-                    </span>
-                    <span>
-                      <h1>Comment:</h1>
-                      <br></br>
-                      {post.comment}
-                    </span>
-                  </div>
-                  <div>
-                    <button onClick={() => handleClearDb()}>
-                      Очистить таблицу
-                    </button>
-                  </div>
-                </div>
-              );
-            })
-          : "Loading..."}
-      </div>
-    </div>
+    <Router>
+      <Navbar color="light">
+        <NavbarText>
+          <Link to="/">Home</Link>
+        </NavbarText>
+        <NavbarText>
+          <Link to="/posts">Posts</Link>
+        </NavbarText>
+        <NavbarText>
+          <Link to="/loginPage">Login</Link>
+        </NavbarText>
+        <NavbarText>
+          <Link to="/registration">Registration</Link>
+        </NavbarText>
+      </Navbar>
+
+      <Switch>
+        <Route exact path="/posts">
+          <Posts />
+        </Route>
+        <Route exact path="/">
+          <Home />
+        </Route>
+        <Route exact path="/loginPage"></Route>
+        <Route exact path="/registration"></Route>
+      </Switch>
+    </Router>
   );
 }
 
-export default App;
