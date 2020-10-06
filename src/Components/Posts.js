@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   InputGroup,
   Input,
@@ -10,26 +10,51 @@ import {
 import CardBody from "reactstrap/lib/CardBody";
 import UncontrolledAlert from "reactstrap/lib/UncontrolledAlert";
 
+function b64EncodeUnicode(str) {
+  return btoa(
+    encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function toSolidBytes(
+      match,
+      p1
+    ) {
+      return String.fromCharCode("0x" + p1);
+    })
+  );
+}
+
+function b64DecodeUnicode(str) {
+  return decodeURIComponent(
+    atob(str)
+      .split("")
+      .map(function (c) {
+        return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+      })
+      .join("")
+  );
+}
+
 export default function Posts() {
-  const [title, setTitle] = useState(null);
   const [message, setMessage] = useState(null);
   const [posts, setPosts] = useState(null);
-  const [needUpdate, setUpdate] = useState(null);
 
-  useEffect(() => {
+  function receiveData() {
     fetch("/api/posts")
       .then((response) => response.json())
       .then((data) => {
+        console.log(data);
         const _data_ = data.posts.map((e) => JSON.parse(e));
         setPosts(_data_);
+        setTimeout(receiveData, 2000);
       });
-  }, [needUpdate]);
+  }
+
+  useEffect(() => {
+    receiveData();
+  }, []);
 
   function handlePostData() {
-    setUpdate(needUpdate + 1);
     const dataToSend = {
-      title: title,
-      comment: message,
+      comment: b64EncodeUnicode(message),
+      username: localStorage.getItem("username"),
     };
     fetch("/api/add", {
       method: "POST",
@@ -46,7 +71,6 @@ export default function Posts() {
     });
   }
   function handleClearDb() {
-    setUpdate(needUpdate + 1);
     fetch("/api/posts/clear", {
       method: "POST",
       credentials: "include",
@@ -64,7 +88,6 @@ export default function Posts() {
   return (
     <div className="d-flex flex-column">
       <InputGroup className="mb-5 mt-5 w-50 align-self-center d-flex justify-between">
-        <Input onInput={(e) => setTitle(e.target.value)} />
         <Input onInput={(e) => setMessage(e.target.value)} />
         <Button
           type="submit"
@@ -81,14 +104,12 @@ export default function Posts() {
           <div>
             {posts.map((post, i) => {
               return (
-                <Card key={i} className="container">
+                <Card key={i} className="container mb-3">
                   <CardBody>
                     <CardTitle>
-                      <b>Title:</b> {post.title}
+                      <b>{post.userName}</b>
                     </CardTitle>
-                    <CardText>
-                      <b>Comment:</b> {post.comment}
-                    </CardText>
+                    <CardText>{b64DecodeUnicode(post.comment)}</CardText>
                   </CardBody>
                 </Card>
               );
@@ -104,7 +125,9 @@ export default function Posts() {
             </div>
           </div>
         ) : (
-          <UncontrolledAlert color="info">No posts yet...</UncontrolledAlert>
+          <UncontrolledAlert className="container" color="info">
+            No messages yet...
+          </UncontrolledAlert>
         )}
       </div>
     </div>
