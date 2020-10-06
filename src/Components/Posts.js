@@ -41,7 +41,7 @@ export default function Posts() {
       .then((response) => response.json())
       .then((data) => {
         console.log(data);
-        const _data_ = data.posts.map((e) => JSON.parse(e));
+        const _data_ = data.posts.map((e) => JSON.parse(e)); // TODO compare arrays
         setPosts(_data_);
         setTimeout(receiveData, 2000);
       });
@@ -53,7 +53,7 @@ export default function Posts() {
 
   function handlePostData() {
     const dataToSend = {
-      comment: b64EncodeUnicode(message),
+      comment: b64EncodeUnicode(message), // TODO encrypt messages
       username: localStorage.getItem("username"),
     };
     fetch("/api/add", {
@@ -85,10 +85,20 @@ export default function Posts() {
     });
   }
 
+  function handleEnterPress(e) {
+    if (e.key === "Enter") {
+      handlePostData();
+    }
+  }
+
   return (
     <div className="d-flex flex-column">
       <InputGroup className="mb-5 mt-5 w-50 align-self-center d-flex justify-between">
-        <Input onInput={(e) => setMessage(e.target.value)} />
+        <Input
+          onInput={(e) => setMessage(e.target.value)}
+          onKeyPress={(e) => handleEnterPress(e)}
+          className="mr-3"
+        />
         <Button
           type="submit"
           onClick={() => {
@@ -96,7 +106,7 @@ export default function Posts() {
           }}
           color="success"
         >
-          Send data
+          Send message
         </Button>
       </InputGroup>
       <div>
@@ -114,15 +124,17 @@ export default function Posts() {
                 </Card>
               );
             })}
-            <div className="d-flex justify-content-center">
-              <Button
-                onClick={() => handleClearDb()}
-                color="danger"
-                className="mt-5"
-              >
-                Очистить таблицу
-              </Button>
-            </div>
+            {localStorage.getItem("username") === "admin" && (
+              <div className="d-flex justify-content-center">
+                <Button
+                  onClick={() => handleClearDb()}
+                  color="danger"
+                  className="mt-5"
+                >
+                  Clear chat messages
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           <UncontrolledAlert className="container" color="info">
